@@ -1,0 +1,27 @@
+# Core Framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.5.0
+
+# AWS Integration
+boto3>=1.26.0
+botocore>=1.29.0
+
+# Authentication & Security
+PyJWT[crypto]>=2.8.0
+
+# Configuration & Utilities
+python-dotenv>=1.0.0
+python-multipart>=0.0.6
+
+# AWS Lambda Deployment (Optional)
+mangum>=0.19.0
+
+# HTTP Client (for Cognito operations)
+requests>=2.32.0
+
+# Production Server (for Elastic Beanstalk)
+gunicorn>=21.2.0
+
+# AWS CLI (for deployment)
+awsebcli>=3.20.0

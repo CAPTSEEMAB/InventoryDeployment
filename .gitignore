@@ -1,0 +1,41 @@
+# Environment files (contains secrets/credentials)
+.env
+.env.local
+.env.*.local
+
+# Virtual environments (large, can be recreated)
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache (auto-generated)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# IDE files (user-specific)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files (system-specific)
+.DS_Store
+Thumbs.db
+
+# Logs (runtime generated)
+*.log
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# Deployment / secrets
+AWS_CONSOLE_DEPLOYMENT.md
+AWS_CONSOLE_DEPLOYMENT_PLACEHOLDER.md
+deploy.zip
+.env
