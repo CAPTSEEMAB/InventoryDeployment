@@ -7,7 +7,7 @@ from . import auth, products, s3_routes
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env", override=True)
 
 app = FastAPI(
-    title="Inventory API - EBS Deployment",
+    title="Inventory API - EBS production",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -28,7 +28,7 @@ app.include_router(s3_routes.router, prefix="/api")
 async def root():
     return {
         "status": "healthy",
-        "service": "Inventory API- EBS Deployment",
+        "service": "Inventory API- EBS Production",
         "version": "1.0.0"
     }
 
