@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from .utils import ok, bad
 from .cognito_client import get_cognito_client
 
+# Authentication routes and helpers (Cognito-backed auth)
+
 security = HTTPBearer()
 router = APIRouter(prefix="/auth", tags=["Auth"])
 COGNITO_CONFIGURED = (
@@ -24,6 +26,7 @@ class LoginBody(BaseModel):
     password: str
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Dependency to validate bearer token and return the authenticated user
     if not COGNITO_CONFIGURED:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -51,6 +54,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 @router.post("/signup")
 def signup(body: SignupBody):
+    # Register a new user in Cognito and optionally subscribe them to SNS
     if not COGNITO_CONFIGURED:
         return bad(503, "SERVICE_UNAVAILABLE", "Authentication service not configured")
     
@@ -100,6 +104,7 @@ def signup(body: SignupBody):
 
 @router.post("/login") 
 def login(body: LoginBody):
+    # Authenticate a user and return tokens and user info
     if not COGNITO_CONFIGURED:
         return bad(503, "SERVICE_UNAVAILABLE", "Authentication service not configured")
     

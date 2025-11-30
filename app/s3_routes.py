@@ -3,6 +3,7 @@ from .auth import get_current_user
 from .utils import ok, bad
 from .s3.service import BulkDataService
 
+# Routes for bulk file operations using the S3 BulkDataService
 router = APIRouter(prefix="/s3", tags=["S3"])
 
 try:
@@ -12,6 +13,7 @@ except:
 
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...), current=Depends(get_current_user)):
+    # upload a file via multipart form and return the stored file key
     if not file_service:
         return bad(503, "SERVICE_UNAVAILABLE", "S3 not configured")
     
@@ -31,6 +33,7 @@ async def upload_file(file: UploadFile = File(...), current=Depends(get_current_
 
 @router.get("/files")
 async def list_files(current=Depends(get_current_user)):
+    # list uploaded files and return metadata
     if not file_service:
         return bad(503, "SERVICE_UNAVAILABLE", "S3 not configured")
     
@@ -42,6 +45,7 @@ async def list_files(current=Depends(get_current_user)):
 
 @router.get("/download/{file_key:path}")
 async def download_file(file_key: str, current=Depends(get_current_user)):
+    # generate a presigned download URL for a stored file
     if not file_service:
         return bad(503, "SERVICE_UNAVAILABLE", "S3 not configured")
     

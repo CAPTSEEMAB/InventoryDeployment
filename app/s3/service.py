@@ -9,8 +9,10 @@ from .s3_client import S3Client
 
 
 class BulkDataService:
+    # Service for uploading, downloading and previewing bulk files via S3
     
     def __init__(self):
+        # initialize S3 client and allowed file types
         self.s3_client = S3Client()
         self.allowed_file_types = {
             'csv': 'text/csv',
@@ -21,6 +23,7 @@ class BulkDataService:
         
     
     def generate_file_key(self, original_filename: str) -> str:
+        # generate a unique filename key for storage
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_id = str(uuid.uuid4())[:8]
         
@@ -28,15 +31,17 @@ class BulkDataService:
         return filename
     
     def validate_file_type(self, filename: str) -> bool:
-        
+        # check if the uploaded file has an allowed extension
         file_extension = filename.split('.')[-1].lower()
         return file_extension in self.allowed_file_types
     
     def get_content_type(self, filename: str) -> str:
+        # map filename extension to MIME content type
         file_extension = filename.split('.')[-1].lower()
         return self.allowed_file_types.get(file_extension, 'application/octet-stream')
     
     def upload_bulk_file(self, file_content: bytes, filename: str) -> Optional[Dict]:
+        # validate and upload a bulk file to S3
         try:
             if not self.validate_file_type(filename):
                 return {
@@ -71,6 +76,7 @@ class BulkDataService:
             }
     
     def download_bulk_file(self, file_key: str) -> Optional[Dict]:
+        # download a stored bulk file and return metadata
         try:
             file_content = self.s3_client.download_file(file_key)
             
@@ -95,6 +101,7 @@ class BulkDataService:
             }
     
     def list_files(self) -> List[Dict]:
+        # list files stored in S3 and attempt to recover original filenames
         try:
             files = self.s3_client.list_files("")
             
@@ -120,6 +127,7 @@ class BulkDataService:
             return []
     
     def delete_bulk_file(self, file_key: str) -> Dict:
+        # delete a stored file from S3
         try:
             success = self.s3_client.delete_file(file_key)
             
@@ -142,11 +150,11 @@ class BulkDataService:
             }
     
     def get_download_url(self, file_key: str, expiration: int = 3600) -> Optional[str]:
-       
+        # return a presigned download URL for a file
         return self.s3_client.get_file_url(file_key, expiration)
     
     def preview_csv_content(self, file_key: str, max_rows: int = 10) -> Optional[Dict]:
-       
+        # preview a CSV file's headers and a small sample of rows
         try:
             if not file_key.lower().endswith('.csv'):
                 return {
@@ -190,6 +198,7 @@ class BulkDataService:
             }
     
     def get_supported_file_types(self) -> List[str]:
+        # return keys of supported file types
         return list(self.allowed_file_types.keys())
     
     def get_supported_file_types(self) -> List[str]:

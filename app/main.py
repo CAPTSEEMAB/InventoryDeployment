@@ -1,3 +1,5 @@
+
+# this is the FastAPI application entrypoint for the Inventory backend
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +9,7 @@ from . import auth, products, s3_routes
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env", override=True)
 
 app = FastAPI(
-    title="Inventory API - EBS production",
+    title="Inventory API - EBS hosted production",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -26,6 +28,7 @@ app.include_router(s3_routes.router, prefix="/api")
 
 @app.get("/")
 async def root():
+    # health endpoint: basic service status
     return {
         "status": "healthy",
         "service": "Inventory API- EBS Production",
@@ -34,11 +37,12 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Detailed health check"""
+    # detailed health check: returns ok when service is healthy
     return {"status": "ok"}
 
 @app.on_event("startup")
 async def startup():
+    # startup event: attempt to start background worker for queue processing
     try:
         from .sqs.worker import start_background_worker
         import asyncio

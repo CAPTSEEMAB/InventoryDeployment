@@ -7,6 +7,7 @@ from .notification_queue import NotificationQueueService
 
 
 class NotificationWorker:
+    # Background worker that polls the notification queue and processes messages
     def __init__(self, batch_size: int = 5, polling_interval: int = 10):
         self.notification_service = NotificationQueueService()
         self.batch_size = batch_size
@@ -23,6 +24,7 @@ class NotificationWorker:
         }
     
     async def start(self):
+        # start the polling loop for processing queued notifications
         if not self.notification_service.enabled:
             return
         
@@ -43,6 +45,7 @@ class NotificationWorker:
             await self._shutdown()
     
     async def _process_batch(self):
+        # process a single batch of queued notifications using a thread pool
         try:
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -63,12 +66,15 @@ class NotificationWorker:
             self.stats["total_failed"] += 1
     
     def _signal_handler(self, signum, frame):
+        # signal handler to stop the loop gracefully
         self.running = False
     
     async def _shutdown(self):
+        # perform shutdown tasks for the worker
         self.running = False
     
     def get_stats(self) -> Dict[str, Any]:
+        # return runtime statistics for the worker
         runtime = None
         if self.stats["start_time"]:
             runtime = datetime.now() - self.stats["start_time"]
@@ -102,11 +108,13 @@ _worker_instance = None
 def get_notification_worker(batch_size: int = 5, polling_interval: int = 10) -> NotificationWorker:
     global _worker_instance
     if _worker_instance is None:
+        # create a singleton worker instance
         _worker_instance = NotificationWorker(batch_size, polling_interval)
     return _worker_instance
 
 
 async def start_background_worker(batch_size: int = 5, polling_interval: int = 10):
+    # coroutine entrypoint to start worker from application startup
     worker = get_notification_worker(batch_size, polling_interval)
     await worker.start()
 

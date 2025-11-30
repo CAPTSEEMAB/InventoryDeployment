@@ -12,10 +12,13 @@ from .interfaces import QueueMessage, QueueStats
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=ROOT_ENV, override=True)
 
+# Lightweight SQS client wrapper providing queue operations used by the worker
+
 
 class SQSClient:
-    
+    # SQS client for send/receive/delete and queue management
     def __init__(self):
+        # initialize boto3 SQS client and cache
         self.sqs_client = boto3.client(
             'sqs',
             aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -53,6 +56,7 @@ class SQSClient:
     
     def create_queue(self, queue_name: str, dead_letter_queue_arn: Optional[str] = None, 
                      visibility_timeout: int = 30, message_retention_period: int = 1209600) -> str:
+        # create a new SQS queue (idempotent) and return its URL
         try:
             existing_url = self._get_queue_url(queue_name)
             if existing_url:
@@ -84,6 +88,7 @@ class SQSClient:
             raise Exception(f"Failed to create queue {queue_name}: {e}")
     
     def send_message(self, queue_name: str, message: QueueMessage, delay_seconds: int = 0) -> bool:
+        # send a QueueMessage to the named queue
         try:
             queue_url = self._get_queue_url(queue_name)
             if not queue_url:
@@ -118,6 +123,7 @@ class SQSClient:
     
     def receive_messages(self, queue_name: str, max_messages: int = 1, 
                         wait_time: int = 20) -> List[Dict[str, Any]]:
+        # receive messages from a queue and return parsed QueueMessage entries
         try:
             queue_url = self._get_queue_url(queue_name)
             if not queue_url:
@@ -157,6 +163,7 @@ class SQSClient:
             return []
     
     def delete_message(self, queue_name: str, receipt_handle: str) -> bool:
+        # delete a processed message using its receipt handle
         try:
             queue_url = self._get_queue_url(queue_name)
             if not queue_url:
@@ -175,6 +182,7 @@ class SQSClient:
             return False
     
     def get_queue_stats(self, queue_name: str) -> Optional[QueueStats]:
+        # fetch approximate queue statistics
         try:
             queue_url = self._get_queue_url(queue_name)
             if not queue_url:
@@ -201,6 +209,7 @@ class SQSClient:
             return None
     
     def purge_queue(self, queue_name: str) -> bool:
+        # purge (delete) all messages from a queue
         try:
             queue_url = self._get_queue_url(queue_name)
             if not queue_url:
@@ -215,6 +224,7 @@ class SQSClient:
             return False
     
     def list_queues(self, prefix: str = "") -> List[str]:
+        # list queue names, optionally filtered by prefix
         try:
             if prefix:
                 response = self.sqs_client.list_queues(QueueNamePrefix=prefix)

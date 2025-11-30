@@ -8,6 +8,7 @@ from .auth import get_current_user
 from .dynamodb_client import get_db_client
 from .notifications import get_notification_service
 
+# products API endpoints (CRUD for products)
 router = APIRouter(prefix="/products", tags=["Products"])
 
 try:
@@ -41,6 +42,7 @@ class ProductUpdate(BaseModel):
 
 @router.get("/")
 def get_all_products(current=Depends(get_current_user)):
+    # fetch all products (paginated by limit)
     try:
         products = db.get_all_products(limit=100)
         return ok("Products fetched", products)
@@ -49,6 +51,7 @@ def get_all_products(current=Depends(get_current_user)):
 
 @router.get("/search")
 def search_products(query: str, current=Depends(get_current_user)):
+    # search products by name, description, category or sku
     try:
         all_products = db.get_all_products(limit=1000)
         
@@ -72,6 +75,7 @@ def search_products(query: str, current=Depends(get_current_user)):
 
 @router.post("/", status_code=201)
 def create_product(body: ProductCreate, current=Depends(get_current_user)):
+    # create a new product and emit a notification about creation
     try:
         product_data = body.model_dump(mode="json")
         product_data = jsonable_encoder(product_data)
@@ -111,6 +115,7 @@ def create_product(body: ProductCreate, current=Depends(get_current_user)):
 
 @router.get("/{product_id}")
 def get_product_by_id(product_id: str, current=Depends(get_current_user)):
+    # retrieve a product by its unique id
     try:
         product = db.get_product_by_id(product_id)
         if not product:
@@ -123,6 +128,7 @@ def get_product_by_id(product_id: str, current=Depends(get_current_user)):
 
 @router.put("/{product_id}")
 def update_product_by_id(product_id: str, body: ProductUpdate, current=Depends(get_current_user)):
+    # update fields for an existing product
     try:
         existing_product = db.get_product_by_id(product_id)
         if not existing_product:
@@ -156,6 +162,7 @@ def update_product_by_id(product_id: str, body: ProductUpdate, current=Depends(g
 
 @router.delete("/{product_id}")
 def delete_product_by_id(product_id: str, current=Depends(get_current_user)):
+    # delete a product and notify subscribers about deletion
     try:
         existing_product = db.get_product_by_id(product_id)
         if not existing_product:

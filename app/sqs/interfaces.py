@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 class QueueMessage(BaseModel):
+    # Represents a message stored in the processing queue
     id: str
     message_type: str
     payload: Dict[str, Any]
@@ -15,6 +16,7 @@ class QueueMessage(BaseModel):
 
 
 class NotificationPayload(BaseModel):
+    # Payload used for notification messages
     recipient_email: str
     subject: str
     message: str
@@ -24,6 +26,7 @@ class NotificationPayload(BaseModel):
 
 
 class QueueStats(BaseModel):
+    # Simple stats summary for a queue
     queue_name: str
     visible_messages: int
     in_flight_messages: int

@@ -5,13 +5,15 @@ from pathlib import Path
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 
-# Load environment variables
+
+# S3 helper client for simple upload/download/list operations
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=ROOT_ENV, override=True)
 
 
 class S3Client:    
     def __init__(self):
+        # initialize S3 client with credentials from env
         self.aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
         self.aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
         self.aws_region = os.getenv('AWS_S3_REGION', 'us-east-1')
@@ -30,6 +32,7 @@ class S3Client:
 
     
     def upload_file(self, file_content: bytes, file_key: str, content_type: str = 'application/octet-stream') -> bool:
+        # upload bytes to S3 at the specified key
         try:
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
@@ -45,6 +48,7 @@ class S3Client:
             return False
     
     def download_file(self, file_key: str) -> Optional[bytes]:
+        # download an object from S3 and return its bytes
         try:
             response = self.s3_client.get_object(Bucket=self.bucket_name, Key=file_key)
             content = response['Body'].read()
@@ -56,6 +60,7 @@ class S3Client:
             return None
     
     def list_files(self, prefix: str = '') -> List[Dict]:
+        # list objects under a prefix and return metadata list
         try:
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name,
@@ -80,6 +85,7 @@ class S3Client:
             return []
     
     def delete_file(self, file_key: str) -> bool:
+        # delete an object by key
         try:
             self.s3_client.delete_object(Bucket=self.bucket_name, Key=file_key)
             return True
@@ -90,6 +96,7 @@ class S3Client:
             return False
     
     def file_exists(self, file_key: str) -> bool:
+        # check if an object exists in the bucket
         try:
             self.s3_client.head_object(Bucket=self.bucket_name, Key=file_key)
             return True
@@ -99,6 +106,7 @@ class S3Client:
             return False
     
     def get_file_url(self, file_key: str, expiration: int = 3600) -> Optional[str]:
+        # generate a presigned URL for a file
         try:
             url = self.s3_client.generate_presigned_url(
                 'get_object',

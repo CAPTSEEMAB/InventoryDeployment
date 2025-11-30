@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Lightweight Cognito client wrapper used by the auth routes
+
 class CognitoClient:
     def __init__(self):
         self.region = os.getenv('AWS_COGNITO_REGION', 'us-east-1')
@@ -22,12 +24,14 @@ class CognitoClient:
         self._jwks = None
         
     def get_jwks(self):
+        # fetch and cache JWKS for token verification
         if self._jwks is None:
             jwks_url = f"https://cognito-idp.{self.region}.amazonaws.com/{self.user_pool_id}/.well-known/jwks.json"
             self._jwks = requests.get(jwks_url).json()
         return self._jwks
     
     def sign_up(self, email: str, password: str, name: str, role: str = "USER") -> Dict[str, Any]:
+        # register a new user in Cognito
         try:
             response = self.cognito.sign_up(
                 ClientId=self.client_id,
@@ -43,6 +47,7 @@ class CognitoClient:
             return {'success': False, 'message': str(e), 'error': str(e)}
     
     def login(self, email: str, password: str) -> Dict[str, Any]:
+        # authenticate a user and return tokens
         try:
             # Try with email/username as provided first
             try:
@@ -81,6 +86,7 @@ class CognitoClient:
             return {'success': False, 'message': str(e), 'error': str(e)}
     
     def verify_token(self, token: str) -> Dict[str, Any]:
+        # verify a JWT token using the Cognito JWKS and return the payload
         try:
             import json
             from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
@@ -126,5 +132,6 @@ _client = None
 def get_cognito_client():
     global _client
     if not _client:
+        # create and memoize a singleton CognitoClient
         _client = CognitoClient()
     return _client

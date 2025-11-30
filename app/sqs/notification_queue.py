@@ -12,9 +12,11 @@ from .interfaces import QueueMessage, NotificationPayload
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(dotenv_path=ROOT_ENV, override=True)
 
+# Notification queue service that enqueues and processes notification messages
+
 
 class NotificationQueueService:
-    
+    # orchestrates enqueueing and processing of notification messages
     def __init__(self):
         self.sqs_client = SQSClient()
         self.enabled = os.getenv('SQS_ENABLE_NOTIFICATIONS', 'true').lower() == 'true'
@@ -28,6 +30,7 @@ class NotificationQueueService:
             self._ensure_queues_exist()
     
     def _ensure_queues_exist(self):
+        # ensure the primary queue and DLQ are created
         try:
             # Create dead letter queue first
             dlq_url = self.sqs_client.create_queue(
@@ -51,6 +54,7 @@ class NotificationQueueService:
             pass
     
     def _get_queue_arn(self, queue_name: str) -> Optional[str]:
+        # construct the ARN for a queue name
         try:
             return f"arn:aws:sqs:{self.sqs_client.region}:{self.sqs_client.account_id}:{queue_name}"
         except Exception:
@@ -58,7 +62,7 @@ class NotificationQueueService:
     
     def queue_notification(self, notification: NotificationPayload, 
                           delay_seconds: int = 0, priority: str = "normal") -> bool:
-      
+        # enqueue a notification payload to SQS, fallback to SNS if disabled
         if not self.enabled:
             return self._send_direct_notification(notification)
         
@@ -91,7 +95,7 @@ class NotificationQueueService:
             return self._send_direct_notification(notification)
     
     def _send_direct_notification(self, notification: NotificationPayload) -> bool:
-       
+        # directly publish to SNS as a fallback delivery method
         try:
             # Send email via SNS directly
             import boto3
@@ -117,7 +121,7 @@ class NotificationQueueService:
             return False
     
     def process_queued_notifications(self, batch_size: int = 10) -> Dict[str, Any]:
-      
+        # process messages from the notification queue in batches
         if not self.enabled:
             return {"status": "disabled", "processed": 0}
         
@@ -200,6 +204,7 @@ class NotificationQueueService:
         return min(base_delay * (2 ** (retry_count - 1)), 480)  # Max 8 minutes
     
     def _send_email_notification(self, notification: NotificationPayload) -> bool:
+        # send the notification message via SNS topic
         try:
             # Import here to avoid circular imports
             import boto3
@@ -238,6 +243,7 @@ class NotificationQueueService:
             return False
     
     def _get_sns_topic_arn(self, topic_name: str) -> Optional[str]:
+        # lookup an SNS topic ARN by name
         try:
             import boto3
             
@@ -260,6 +266,7 @@ class NotificationQueueService:
             return None
     
     def get_queue_stats(self) -> Dict[str, Any]:
+        # return queue status and DLQ/main queue stats
         if not self.enabled:
             return {"status": "disabled"}
         
@@ -282,6 +289,7 @@ class NotificationQueueService:
             }
     
     def requeue_failed_messages(self, max_messages: int = 10) -> Dict[str, Any]:
+        # move messages from DLQ back to the main queue for reprocessing
         if not self.enabled:
             return {"status": "disabled", "requeued": 0}
         
